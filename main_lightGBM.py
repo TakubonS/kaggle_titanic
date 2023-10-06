@@ -2,39 +2,31 @@ import numpy as np
 import pandas as pd
 import lightgbm as lgb
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 import os
 
-VIS_PATH = "visualization/"
-if not os.path.exists(VIS_PATH):
-    os.makedirs(VIS_PATH)
+def convert_obj_to_category(df_):
+    object_cols = [col for col in df_.columns if df_[col].dtype == "object"]
+    for col in object_cols:
+        df_[col] = df_[col].astype("category")
+    return df_
 
-# read train.csv and test.csv
-train_df = pd.read_csv('train.csv')
-test_df = pd.read_csv('test.csv')
+if __name__ == '__main__':
 
+    VIS_PATH = "visualization/"
+    if not os.path.exists(VIS_PATH):
+        os.makedirs(VIS_PATH)
 
-# print(train_df.head())
-# print(train_df.info())
+    # read train.csv and test.csv
+    train_df = pd.read_csv('train.csv')
+    test_df = pd.read_csv('test.csv')
+    PassengerID = test_df['PassengerId']
 
-# categorical features: survived, Sex, Pclass, Embarked, Cabin, Name, Ticket, Sibsp, Parch
-# numerical features: Age, Fare, passengerId
+    X = train_df.drop(['Survived'], axis=1)
+    X = convert_obj_to_category(X)
+    y = train_df['Survived']
+    X_test = convert_obj_to_category(test_df)
 
-PassengerID = test_df['PassengerId']
-
-# train test まとめて前処理したいのでまとめる
-train_df.drop(['Survived'], axis=1, inplace=True)
-combined_df = train_df.append(test_df)
-# ch
-
-categorical_val_1 = ["Survived", "Pclass", "Sex", "SibSp", "Parch", "Embarked"]
-# visualize the frequency of each categorical features
-for col in categorical_val_1:
-    plt.figure(figsize=(10, 5))
-    plt.title(col)
-    train_df[col].value_counts().plot.bar()
-    plt.savefig(VIS_PATH + col + ".png")
-
-categorical_val_2 = ["Cabin", "Name", "Ticket"]
-# print the count of each value
-for col in categorical_val_2:
-    print(train_df[col].value_counts())
+    # split train_df into train and valid with train_test_split
+    X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.2, random_state=0)
+    print(X_train.shape())
